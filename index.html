@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shree Sawariya Traders - Billing Software</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Top App Navigation Bar -->
+  <header class="app-header">
+    <div class="brand-section">
+      <div class="brand-logo-icon">ST</div>
+      <div class="brand-text">
+        <h1 id="headerShopTitle">Shree Sawariya Traders</h1>
+        <p id="headerShopSubtitle">CARDAMOM AND ALL SPICES MERCHANT</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <!-- Folder Link Badge -->
+      <button class="btn btn-secondary btn-sm" id="btnChooseFolder" title="बिल सेव करने के लिए फोल्डर चुनें">
+        📁 <span id="folderStatusText">सेव फोल्डर चुनें (Select Folder)</span>
+      </button>
+
+      <!-- Shop Settings -->
+      <button class="btn btn-secondary btn-sm" id="btnShopSettings" title="दुकान व बैंक विवरण बदलें">
+        ⚙️ दुकान जानकारी
+      </button>
+
+      <!-- Backup & Restore -->
+      <button class="btn btn-secondary btn-sm" id="btnBackup" title="डेटा बैकअप डाउनलोड करें">
+        💾 बैकअप (Backup)
+      </button>
+      <button class="btn btn-secondary btn-sm" id="btnRestoreTrigger" title="डेटा रीस्टोर करें">
+        📥 रीस्टोर (Restore)
+      </button>
+      <input type="file" id="restoreFileInput" accept=".json" style="display: none;">
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="tabs-nav">
+    <button class="tab-btn active" data-tab="tab-bill">
+      📋 <span>बिल बनाएं (Make Bill)</span>
+    </button>
+    <button class="tab-btn" data-tab="tab-customers">
+      👥 <span>ग्राहक सूची (Customers)</span>
+    </button>
+    <button class="tab-btn" data-tab="tab-stock">
+      📦 <span>स्टॉक सूची (Stock List)</span>
+    </button>
+  </nav>
+
+  <!-- Main Container -->
+  <main class="main-content">
+
+    <!-- TAB 1: MAKE BILL -->
+    <section id="tab-bill" class="tab-pane active">
+      <div class="bill-screen-layout">
+
+        <!-- Left Column: Form Editor -->
+        <div class="editor-panel">
+          <div class="panel-header">
+            <h2>बिल प्रविष्टि (Bill Entry Form)</h2>
+            <button class="btn btn-secondary btn-sm" id="btnResetBill">🔄 नया बिल (Reset)</button>
+          </div>
+
+          <div class="panel-body">
+            <!-- Customer Section -->
+            <div class="form-group">
+              <label for="billCustomerSelect">ग्राहक चुनें (Select Customer) *</label>
+              <div class="input-with-button">
+                <input type="text" id="billCustomerSelect" list="customerDataList" class="form-control" placeholder="नाम या फोन टाइप करें या चुनें...">
+                <datalist id="customerDataList"></datalist>
+                <button type="button" class="btn btn-primary" id="btnQuickAddCustomer" title="नया ग्राहक तुरंत जोड़ें">+ नया</button>
+              </div>
+              <!-- Warning when customer state is missing -->
+              <div id="customerStateAlert" class="customer-state-warning-badge" style="display: none;"></div>
+            </div>
+
+            <!-- Customer Details auto-filled / editable -->
+            <div class="form-row">
+              <div class="form-group">
+                <label>शहर (City)</label>
+                <input type="text" id="billCity" class="form-control" placeholder="e.g. Ahmedabad">
+              </div>
+              <div class="form-group">
+                <label>जीएसटी नं (GSTIN No.)</label>
+                <input type="text" id="billCustomerGstin" class="form-control" placeholder="24AAACG...">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>पता (Address)</label>
+                <input type="text" id="billAddress" class="form-control" placeholder="दुकान / एरिया...">
+              </div>
+              <div class="form-group">
+                <div class="form-row">
+                  <div>
+                    <label>राज्य (State) *</label>
+                    <select id="billState" class="form-control">
+                      <!-- Populated with all Indian states & UTs -->
+                    </select>
+                  </div>
+                  <div>
+                    <label>कोड (Code)</label>
+                    <input type="text" id="billStateCode" class="form-control" value="24" readonly>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="section-divider">
+              <span class="section-divider-title">बिल विवरण (Bill Details)</span>
+            </div>
+
+            <div class="form-row-3">
+              <div class="form-group">
+                <label>बिल नंबर (Bill No.) *</label>
+                <input type="number" id="billNumber" class="form-control" style="font-weight: bold; color: var(--bill-ink);" value="4624">
+              </div>
+              <div class="form-group">
+                <label>तारीख (Date) *</label>
+                <input type="date" id="billDate" class="form-control">
+              </div>
+              <div class="form-group">
+                <label>एल. आर. नं (L. R. No.)</label>
+                <input type="text" id="billLrNo" class="form-control" placeholder="LR-...">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>ट्रांसपोर्ट (Transport)</label>
+              <input type="text" id="billTransport" class="form-control" placeholder="e.g. Navrang Roadways / Self">
+            </div>
+
+            <div class="section-divider">
+              <span class="section-divider-title">सामान सूची (Items List)</span>
+            </div>
+
+            <!-- Items Table in Editor -->
+            <div class="items-table-wrapper">
+              <table class="items-input-table">
+                <thead>
+                  <tr>
+                    <th style="width: 30px;">#</th>
+                    <th>आइटम विवरण (Particulars)</th>
+                    <th style="width: 75px;">HSN</th>
+                    <th style="width: 75px;">वजन (Kg)</th>
+                    <th style="width: 85px;">भाव (Rate)</th>
+                    <th style="width: 90px;">रकम (Amount)</th>
+                    <th style="width: 36px;"></th>
+                  </tr>
+                </thead>
+                <tbody id="billItemsTableBody">
+                  <!-- Dynamic rows generated by JS -->
+                </tbody>
+              </table>
+            </div>
+
+            <div style="margin-bottom: 16px;">
+              <button type="button" class="btn btn-secondary btn-sm" id="btnAddItemRow">
+                ➕ नई पंक्ति जोड़ें (+ Add Row)
+              </button>
+            </div>
+
+            <!-- Extra Charges: Packing, Majuri, Dalali, Post -->
+            <div class="section-divider">
+              <span class="section-divider-title">अतिरिक्त खर्च (Additional Charges)</span>
+            </div>
+            <div class="form-row-4">
+              <div class="form-group">
+                <label>Packing (पैकिंग)</label>
+                <input type="number" id="chargePacking" class="form-control" placeholder="0" min="0" step="any" inputmode="decimal">
+              </div>
+              <div class="form-group">
+                <label>Majuri (मजूरी)</label>
+                <input type="number" id="chargeMajuri" class="form-control" placeholder="0" min="0" step="any" inputmode="decimal">
+              </div>
+              <div class="form-group">
+                <label>Dalali (दलाली)</label>
+                <input type="number" id="chargeDalali" class="form-control" placeholder="0" min="0" step="any" inputmode="decimal">
+              </div>
+              <div class="form-group">
+                <label>Post (डाक खर्च)</label>
+                <input type="number" id="chargePost" class="form-control" placeholder="0" min="0" step="any" inputmode="decimal">
+              </div>
+            </div>
+
+            <!-- GST Rates -->
+            <div class="section-divider">
+              <span class="section-divider-title">कर दरें (GST Rates %)</span>
+            </div>
+            <!-- Automatic GST Rule Notice Banner -->
+            <div id="gstRuleNotice" class="gst-rule-badge"></div>
+            <div class="form-row-3">
+              <div class="form-group">
+                <label>SGST %</label>
+                <input type="number" id="taxSgstRate" class="form-control" placeholder="0" step="0.25" value="0" inputmode="decimal">
+              </div>
+              <div class="form-group">
+                <label>CGST %</label>
+                <input type="number" id="taxCgstRate" class="form-control" placeholder="0" step="0.25" value="0" inputmode="decimal">
+              </div>
+              <div class="form-group">
+                <label>IGST %</label>
+                <input type="number" id="taxIgstRate" class="form-control" placeholder="0" step="0.25" value="0" inputmode="decimal">
+              </div>
+            </div>
+
+            <!-- Big Action Buttons -->
+            <div class="action-buttons-bar">
+              <button type="button" class="btn btn-danger btn-lg" id="btnSaveBill">
+                💾 <span id="btnSaveBillText">बिल सेव करें (Save to Folder)</span>
+              </button>
+              <button type="button" class="btn btn-success btn-lg" id="btnPrintBill">
+                🖨️ <span>प्रिंट बिल (Print Bill)</span>
+              </button>
+              <div class="action-buttons-full">
+                <button type="button" class="btn btn-secondary" id="btnDownloadPdf" style="flex: 1;">
+                  📥 PDF डाउनलोड
+                </button>
+                <button type="button" class="btn btn-primary" id="btnShareBill" style="flex: 1;" title="मोबाइल पर WhatsApp/Drive/Files पर शेयर करें">
+                  📤 शेयर (Share PDF)
+                </button>
+                <button type="button" class="btn btn-secondary" id="btnDownloadHtml" style="flex: 1;">
+                  📄 HTML कॉपी
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Right Column: Live Exact Bill Preview -->
+        <div class="preview-panel">
+          <div class="preview-toolbar">
+            <h3 style="font-size: 15px; color: var(--bill-ink); font-weight: 700;">
+              🔍 लाइव बिल प्रिव्यू (Live Preview - Attached Format)
+            </h3>
+            <span style="font-size: 12px; color: #64748b;">(जैसा प्रिंट होगा वैसा ही दिखेगा)</span>
+          </div>
+
+          <div class="preview-scroll-wrapper" id="previewScrollWrapper">
+            <div class="preview-scalable-container" id="previewScaleContainer">
+              <!-- Exact Bill Paper (matches the photo) -->
+              <div id="printable-bill" class="bill-paper">
+
+              <!-- Top Row: GSTIN, TAX INVOICE / Ganesh, Kishorbhai / Mobile -->
+              <div class="bill-header-top">
+                <div class="bill-gstin-header">
+                  GSTIN : <span id="prevShopGstin">24FJPPK2049G1Z3</span>
+                </div>
+                <div class="bill-header-center">
+                  <div class="tax-invoice">TAX INVOICE</div>
+                  <div class="shree-ganesh">ll Shree Ganeshay Namah ll</div>
+                </div>
+                <div class="bill-header-right">
+                  <div class="prop-name" id="prevShopOwner">Kishorbhai Prajapat</div>
+                  <div class="prop-mob">M. : <span id="prevShopMobile">73833 76049</span></div>
+                </div>
+              </div>
+
+              <!-- Main Shop Name -->
+              <div class="bill-shop-name" id="prevShopName">
+                Shree Sawariya Traders
+              </div>
+
+              <!-- Subtitle Banner -->
+              <div class="bill-subtitle-banner" id="prevShopSubtitle">
+                CARDAMOM AND ALL SPICES MERCHANT
+              </div>
+
+              <!-- Shop Address -->
+              <div class="bill-shop-address" id="prevShopAddress">
+                Shop No. 15, Bhadreshwar Society, B/h. HBK High School, O/s. Delhi Gate, Shahibaug, Ahmedabad-380004.
+              </div>
+
+              <!-- Meta Box (Bill No, Date, M/s, City, Add, State, GSTIN, LR, Transport) -->
+              <div class="bill-meta-box">
+                <div class="meta-line">
+                  <span class="meta-label">Bill No. :&nbsp;</span>
+                  <span class="meta-value-line meta-bill-no-val" id="prevBillNo">4624</span>
+                  <span class="meta-label" style="margin-left: 20px;">Date :&nbsp;</span>
+                  <span class="meta-value-line" style="max-width: 150px;" id="prevBillDate"></span>
+                </div>
+                <div class="meta-line">
+                  <span class="meta-label">M/s. :&nbsp;</span>
+                  <span class="meta-value-line" id="prevCustomerName"></span>
+                  <span class="meta-label" style="margin-left: 15px;">City :&nbsp;</span>
+                  <span class="meta-value-line" style="max-width: 180px;" id="prevCustomerCity"></span>
+                </div>
+                <div class="meta-line">
+                  <span class="meta-label">Add. :&nbsp;</span>
+                  <span class="meta-value-line" id="prevCustomerAddress"></span>
+                  <span class="meta-label" style="margin-left: 10px;">State :&nbsp;</span>
+                  <span class="meta-value-line" style="max-width: 120px;" id="prevCustomerState">Gujarat</span>
+                  <span class="meta-label" style="margin-left: 10px;">State Code :&nbsp;</span>
+                  <span class="meta-value-line" style="max-width: 60px;" id="prevCustomerStateCode">24</span>
+                </div>
+                <div class="meta-line">
+                  <span class="meta-label">GSTIN No. :&nbsp;</span>
+                  <span class="meta-value-line" id="prevCustomerGstin"></span>
+                  <span class="meta-label" style="margin-left: 15px;">L. R. No. :&nbsp;</span>
+                  <span class="meta-value-line" style="max-width: 160px;" id="prevLrNo"></span>
+                </div>
+                <div class="meta-line">
+                  <span class="meta-label">Transport :&nbsp;</span>
+                  <span class="meta-value-line" id="prevTransport"></span>
+                </div>
+              </div>
+
+              <!-- Items Table -->
+              <table class="bill-items-table">
+                <thead>
+                  <tr>
+                    <th rowspan="2" class="col-sr">Sr.<br>No.</th>
+                    <th rowspan="2" class="col-part">PARTICULARS</th>
+                    <th rowspan="2" class="col-hsn">HSN<br>CODE</th>
+                    <th rowspan="2" class="col-kg">Kg.</th>
+                    <th rowspan="2" class="col-rate">Rate</th>
+                    <th colspan="2" class="col-amount-main">Amount</th>
+                  </tr>
+                  <tr>
+                    <th class="col-rs">Rs.</th>
+                    <th class="col-ps">PS.</th>
+                  </tr>
+                </thead>
+                <tbody id="prevItemsTableBody">
+                  <!-- Exactly 12 rows will be rendered here to match the fixed sheet layout -->
+                </tbody>
+              </table>
+
+              <!-- Sub Row: Packing | Majuri | Dalali | Post -->
+              <div class="bill-charges-row" style="display: flex; border-left: 1.5px solid var(--bill-border); border-right: 1.5px solid var(--bill-border); font-family: Arial, sans-serif;">
+                <div class="charges-sub-cells" style="flex: 1;">
+                  <div class="charge-cell"><span>Packing</span><span id="prevChargePacking" style="color: #111;"></span></div>
+                  <div class="charge-cell"><span>Majuri</span><span id="prevChargeMajuri" style="color: #111;"></span></div>
+                  <div class="charge-cell"><span>Dalali</span><span id="prevChargeDalali" style="color: #111;"></span></div>
+                  <div class="charge-cell"><span>Post</span><span id="prevChargePost" style="color: #111;"></span></div>
+                </div>
+                <div style="width: 55px; border-right: 1.5px solid var(--bill-border);"></div>
+                <div style="width: 65px; border-right: 1.5px solid var(--bill-border);"></div>
+                <div style="width: 72px; border-right: 1.5px solid var(--bill-border); text-align: right; padding-right: 4px; font-weight: bold; font-size: 11px; display: flex; align-items: center; justify-content: flex-end;" id="prevChargesRs"></div>
+                <div style="width: 33px; text-align: right; padding-right: 4px; font-weight: bold; font-size: 11px; display: flex; align-items: center; justify-content: flex-end;" id="prevChargesPs"></div>
+              </div>
+
+              <!-- Bottom Container: Bank Details Left + Totals Right -->
+              <div class="bill-bottom-container">
+                <!-- Left: Bank Information & Rs In Words -->
+                <div class="bill-bank-section">
+                  <div>
+                    <div class="bank-title" id="prevBankName">KOTAK MAHINDRA BANK</div>
+                    <div class="bank-branch" id="prevBankBranch">SHAHIBAUG BRANCH</div>
+                    <div class="bank-detail-line">A/c. No. : <span id="prevBankAc">7383376049</span></div>
+                    <div class="bank-detail-line">IFSC CODE : <span id="prevBankIfsc">KKBK0000827</span></div>
+                  </div>
+                  <div class="bank-words-line">
+                    Rs In Words : <span id="prevRsInWords" style="font-weight: 800; color: #111;"></span>
+                  </div>
+                </div>
+
+                <!-- Right: Totals (Total, SGST %, CGST %, IGST %, Round Off, Grand Total) -->
+                <div class="bill-totals-section">
+                  <div class="total-line">
+                    <div class="total-label">Total</div>
+                    <div class="total-val-rs" id="prevTotalRs">0</div>
+                    <div class="total-val-ps" id="prevTotalPs">00</div>
+                  </div>
+                  <div class="total-line">
+                    <div class="total-label"><span>SGST</span><span id="prevSgstPctLabel">%</span></div>
+                    <div class="total-val-rs" id="prevSgstRs"></div>
+                    <div class="total-val-ps" id="prevSgstPs"></div>
+                  </div>
+                  <div class="total-line">
+                    <div class="total-label"><span>CGST</span><span id="prevCgstPctLabel">%</span></div>
+                    <div class="total-val-rs" id="prevCgstRs"></div>
+                    <div class="total-val-ps" id="prevCgstPs"></div>
+                  </div>
+                  <div class="total-line">
+                    <div class="total-label"><span>IGST</span><span id="prevIgstPctLabel">%</span></div>
+                    <div class="total-val-rs" id="prevIgstRs"></div>
+                    <div class="total-val-ps" id="prevIgstPs"></div>
+                  </div>
+                  <div class="total-line">
+                    <div class="total-label">Round Off</div>
+                    <div class="total-val-rs" id="prevRoundOffRs">0</div>
+                    <div class="total-val-ps" id="prevRoundOffPs">00</div>
+                  </div>
+                  <div class="total-line total-line-grand">
+                    <div class="total-label" style="font-size: 13px; font-weight: 900;">Grand Total</div>
+                    <div class="total-val-rs" style="font-size: 14px; font-weight: 900;" id="prevGrandTotalRs">0</div>
+                    <div class="total-val-ps" style="font-size: 14px; font-weight: 900;" id="prevGrandTotalPs">00</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Footer Section: Terms, E.&O.E., Signatures -->
+              <div class="bill-footer-section">
+                <div style="flex: 1;">
+                  <ul class="terms-list" id="prevTermsList">
+                    <li>After 15 days Interest will be Charged @ 2%.</li>
+                    <li>No Responsibility after goods are despatched.</li>
+                    <li>It is buyers responsibility to send payment at our Office.</li>
+                  </ul>
+                  <div class="receiver-sign-line">
+                    Receiver's Sign. ________________
+                  </div>
+                </div>
+
+                <div class="eoe-tag">
+                  E. & O. E.
+                </div>
+
+                <div class="for-sign-box">
+                  <div>For, <span id="prevForShopName">Shree Sawariya Traders</span></div>
+                  <div class="sign-gap"></div>
+                  <div>Authorized Sign.</div>
+                </div>
+              </div>
+
+            </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- TAB 2: CUSTOMERS -->
+    <section id="tab-customers" class="tab-pane">
+      <div class="mgmt-container">
+        <div class="mgmt-header">
+          <div>
+            <h2 style="font-size: 20px; font-weight: 800; color: #1e293b;">ग्राहक सूची (Customers Management)</h2>
+            <p style="font-size: 13px; color: var(--text-muted);">यहाँ से अपने सभी ग्राहकों के नाम, पते व जीएसटी नंबर प्रबंधित करें।</p>
+          </div>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <input type="text" id="searchCustomersInput" class="form-control search-box" placeholder="🔍 नाम, शहर या फोन से खोजें...">
+            <button class="btn btn-primary" id="btnOpenAddCustomerModal">
+              ➕ नया ग्राहक जोड़ें (Add Customer)
+            </button>
+          </div>
+        </div>
+
+        <div style="overflow-x: auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>ग्राहक का नाम (M/s)</th>
+                <th>मोबाइल नंबर</th>
+                <th>शहर (City)</th>
+                <th>राज्य (State)</th>
+                <th>ट्रांसपोर्ट (Transport)</th>
+                <th>GSTIN</th>
+                <th style="text-align: right;">कार्य (Action)</th>
+              </tr>
+            </thead>
+            <tbody id="customerTableBody">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: STOCK -->
+    <section id="tab-stock" class="tab-pane">
+      <div class="mgmt-container">
+        <div class="mgmt-header">
+          <div>
+            <h2 style="font-size: 20px; font-weight: 800; color: #1e293b;">स्टॉक सूची (Stock / Items List)</h2>
+            <p style="font-size: 13px; color: var(--text-muted);">मसालों और सामान की सूची (Name, Unit, HSN, Stock Qty)। बिल बनाते समय सीधे चुनें और भाव वहीं भरें।</p>
+          </div>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <input type="text" id="searchStockInput" class="form-control search-box" placeholder="🔍 आइटम या HSN खोजें...">
+            <button class="btn btn-primary" id="btnOpenAddStockModal">
+              ➕ नया सामान जोड़ें (Add Item)
+            </button>
+          </div>
+        </div>
+
+        <div style="overflow-x: auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>सामान का नाम (Particulars)</th>
+                <th>HSN कोड</th>
+                <th>इकाई (Unit)</th>
+                <th>उपलब्ध स्टॉक (Qty Info)</th>
+                <th style="text-align: right;">कार्य (Action)</th>
+              </tr>
+            </thead>
+            <tbody id="stockTableBody">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODALS -->
+
+  <!-- Customer Modal (Add / Edit) -->
+  <div class="modal-overlay" id="customerModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="customerModalTitle">ग्राहक विवरण</h3>
+        <button class="modal-close-btn" data-close="customerModal">&times;</button>
+      </div>
+      <form id="customerForm">
+        <div class="modal-body">
+          <input type="hidden" id="custFormId">
+          <div class="form-group">
+            <label>ग्राहक / फर्म का नाम (M/s.) *</label>
+            <input type="text" id="custFormName" class="form-control" required placeholder="e.g. Gujarat Spice Mart">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>मोबाइल नंबर (Phone)</label>
+              <input type="text" id="custFormPhone" class="form-control" inputmode="tel" placeholder="98250 12345">
+            </div>
+            <div class="form-group">
+              <label>शहर (City)</label>
+              <input type="text" id="custFormCity" class="form-control" placeholder="Ahmedabad">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>पता (Address)</label>
+            <input type="text" id="custFormAddress" class="form-control" placeholder="Shop / Market / Street...">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>राज्य (State) *</label>
+              <select id="custFormState" class="form-control" required>
+                <option value="">-- राज्य चुनें (Select State) --</option>
+                <!-- Populated with all Indian States & UTs -->
+              </select>
+            </div>
+            <div class="form-group">
+              <label>राज्य कोड (State Code)</label>
+              <input type="text" id="custFormStateCode" class="form-control" readonly placeholder="24">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>GSTIN No.</label>
+              <input type="text" id="custFormGstin" class="form-control" placeholder="24AAACG...">
+            </div>
+            <div class="form-group">
+              <label>ट्रांसपोर्ट (Transport)</label>
+              <input type="text" id="custFormTransport" class="form-control" placeholder="e.g. Navrang Roadways / Self">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="customerModal">रद्द करें (Cancel)</button>
+          <button type="submit" class="btn btn-primary" id="btnSaveCustomer">सहेजें (Save)</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Stock Modal (Add / Edit) -->
+  <div class="modal-overlay" id="stockModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="stockModalTitle">सामान विवरण (Stock Item)</h3>
+        <button class="modal-close-btn" data-close="stockModal">&times;</button>
+      </div>
+      <form id="stockForm">
+        <div class="modal-body">
+          <input type="hidden" id="stockFormId">
+          <div class="form-group">
+            <label>सामान का नाम (Particulars) *</label>
+            <input type="text" id="stockFormName" class="form-control" required placeholder="e.g. Elaichi 8mm Green">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>HSN कोड (वैकल्पिक)</label>
+              <input type="text" id="stockFormHsn" class="form-control" placeholder="वैकल्पिक (Optional)">
+            </div>
+            <div class="form-group">
+              <label>इकाई (Unit)</label>
+              <input type="text" id="stockFormUnit" class="form-control" value="Kg.">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>उपलब्ध स्टॉक (Qty Info - केवल जानकारी)</label>
+            <input type="number" id="stockFormQty" class="form-control" inputmode="decimal" placeholder="e.g. 100">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="stockModal">रद्द करें (Cancel)</button>
+          <button type="submit" class="btn btn-primary" id="btnSaveStock">सहेजें (Save)</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Shop Settings Modal -->
+  <div class="modal-overlay" id="shopSettingsModal">
+    <div class="modal-card" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3>दुकान व बैंक विवरण सेटिंग्स</h3>
+        <button class="modal-close-btn" data-close="shopSettingsModal">&times;</button>
+      </div>
+      <form id="shopSettingsForm">
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label>दुकान का नाम *</label>
+              <input type="text" id="setShopName" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label>टैगलाइन (Tagline / Category)</label>
+              <input type="text" id="setSubtitle" class="form-control">
+            </div>
+          </div>
+          <div class="form-row-3">
+            <div class="form-group">
+              <label>मालिक का नाम</label>
+              <input type="text" id="setOwnerName" class="form-control">
+            </div>
+            <div class="form-group">
+              <label>मोबाइल नंबर</label>
+              <input type="text" id="setMobile" class="form-control">
+            </div>
+            <div class="form-group">
+              <label>GSTIN</label>
+              <input type="text" id="setGstin" class="form-control">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>दुकान का पूरा पता</label>
+            <input type="text" id="setAddress" class="form-control">
+          </div>
+          <div class="section-divider">
+            <span class="section-divider-title">बैंक विवरण (Bank Details)</span>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>बैंक का नाम</label>
+              <input type="text" id="setBankName" class="form-control">
+            </div>
+            <div class="form-group">
+              <label>शाखा (Branch)</label>
+              <input type="text" id="setBankBranch" class="form-control">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>खाता संख्या (A/c No.)</label>
+              <input type="text" id="setAccountNo" class="form-control">
+            </div>
+            <div class="form-group">
+              <label>IFSC Code</label>
+              <input type="text" id="setIfscCode" class="form-control">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="shopSettingsModal">रद्द करें</button>
+          <button type="submit" class="btn btn-primary">अपडेट करें (Save)</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Scripts -->
+  <script src="lib/html2pdf.bundle.min.js"></script>
+  <script src="js/number-to-words.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
