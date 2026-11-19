@@ -5,7 +5,7 @@ const path = require('path');
 const { exec } = require('child_process');
 
 const PORT = 8080;
-const BASE_DIR = __dirname;
+const BASE_DIR = path.resolve(__dirname, '..');
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',

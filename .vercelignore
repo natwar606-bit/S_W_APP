@@ -1,0 +1,7 @@
+# Local-only server scripts and dependencies
+local-server/
+*.bat
+
+# Package manager files
+node_modules/
+
